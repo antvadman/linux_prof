@@ -1,0 +1,25 @@
+---
+- name: lab2
+  hosts: all
+  become: true
+
+  tasks:
+   - name: NGINX | Install nginx
+     apt:
+      name: nginx
+
+   - name: Start NGINX
+     ansible.builtin.service:
+      name: nginx
+      state: started
+      
+   - name: Change NGINX port
+     template: src=./default.j2 dest=/etc/nginx/sites-available/default mode=0555
+     notify:
+      - Reload nginx
+
+  handlers:
+   - name: Reload nginx
+     service: name=nginx state=restarted
+
+...
