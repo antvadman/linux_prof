@@ -207,7 +207,7 @@ mkdir /mnt/snap
 lvcreate -L 100M -s -n lv_snap /dev/mapper/VolGroup00/lv_home
 mount -o nouuid /dev/VolGroup00/lv_snap /mnt/snap
 ```
-Посчитаем количество файлов ф каталоге /home
+Посчитаем количество файлов в каталоге /home
 ```
 ll /mnt/snap/vagrant/
 total 24
