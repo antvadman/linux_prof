@@ -1,0 +1,62 @@
+# -*- mode: ruby -*-
+# vi: set ft=ruby :
+
+
+Vagrant.configure("2") do |config|
+
+  config.vm.define "srv" do |srv|
+  
+    srv.vm.box = "ubuntu/trusty64"
+
+    srv.vm.hostname = "srv"
+
+    srv.vm.network :private_network, ip: "192.168.56.11"
+   
+    srv.vm.provider "virtualbox" do |srv|
+      srv.cpus = 2
+      srv.memory = "4096"
+    end 
+          
+    srv.vm.provision "shell", inline: <<-SHELL
+     cd /mnt
+     mkdir share
+     mkdir ./share/upload
+     chmod 755 ./share
+     chmod 777 ./share/upload
+     echo "ro1 file content" >> ./share/ro1
+     echo "ro2 file content" >> ./share/ro2
+
+     apt install nfs-kernel-server -y
+     modprobe nfs
+    
+     ufw allow 2049
+     ufw allow 111
+
+     echo "/mnt/share *(rw,root_squash,no_subtree_check)" >> /etc/exports
+     service  nfs-kernel-server start
+
+
+    SHELL
+  end
+
+  config.vm.define "clnt" do |clnt|
+  
+    clnt.vm.box = "ubuntu/trusty64"
+
+    clnt.vm.hostname = "clnt"
+
+    clnt.vm.network :private_network, ip: "192.168.56.2"
+   
+    clnt.vm.provider "virtualbox" do |clnt|
+      clnt.cpus = 1
+      clnt.memory = "2048"
+    end 
+          
+    clnt.vm.provision "shell", inline: <<-SHELL
+     mount -t nfs -o vers=3 192.168.56.11:/mnt/share /mnt
+     echo "192.168.56.11:/mnt/share /mnt    nfs    defaults        0 0" >> /etc/fstab
+     reboot
+    SHELL
+  end
+
+end
