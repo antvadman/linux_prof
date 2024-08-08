@@ -1,0 +1,65 @@
+# -*- mode: ruby -*-
+# vi: set ft=ruby :
+
+
+Vagrant.configure("2") do |config|
+
+  config.vm.define "repo" do |repo|
+  
+    repo.vm.box = "ubuntu/trusty64"
+
+    repo.vm.hostname = "repo"
+
+    repo.vm.network :public_network
+   
+    repo.vm.provider "virtualbox" do |repo|
+      repo.cpus = 2
+      repo.memory = "4096"
+    end 
+          
+    repo.vm.provision "shell", inline: <<-SHELL
+     
+    mkdir /home/vagrant/repo
+ 
+    
+    touch /home/vagrant/repo/hello.c
+    sudo chmod 777 /home/vagrant/repo/hello.c
+    echo "#include <stdio.h>" >> /home/vagrant/repo/hello.c
+    echo "void main(){" >> /home/vagrant/repo/hello.c
+    echo 'printf("hello world\\n");} '  >> /home/vagrant/repo/hello.c
+    sudo gcc /home/vagrant/repo/hello.c -o /home/vagrant/repo/hello
+    
+    mkdir /home/vagrant/repo/package
+    mkdir /home/vagrant/repo/package/DEBIAN
+    touch /home/vagrant/repo/package/DEBIAN/control
+
+
+    echo "Package: hello" >> /home/vagrant/repo/package/DEBIAN/control
+    echo "Version: 1.0" >> /home/vagrant/repo/package/DEBIAN/control
+    echo "Provides: hello" >> /home/vagrant/repo/package/DEBIAN/control
+    echo "Section: misc" >> /home/vagrant/repo/package/DEBIAN/control
+    echo "Priority: optional" >> /home/vagrant/repo/package/DEBIAN/control
+    echo "Depends: libc6" >> /home/vagrant/repo/package/DEBIAN/control
+    echo "Architecture: amd64" >> /home/vagrant/repo/package/DEBIAN/control
+    echo "Essential: no" >> /home/vagrant/repo/package/DEBIAN/control
+    echo "Installed-Size: 12" >> /home/vagrant/repo/package/DEBIAN/control
+    echo "Maintainer: ant <ant@mail.ru>" >> /home/vagrant/repo/package/DEBIAN/control
+    echo "Description: prints hello world" >> /home/vagrant/repo/package/DEBIAN/control
+
+    sudo mkdir -p /home/vagrant/repo/package/usr/bin
+    sudo mv /home/vagrant/repo/hello /home/vagrant/repo/package/usr/bin
+    sudo dpkg-deb --build /home/vagrant/repo/package
+    sudo mv /home/vagrant/repo/package.deb /home/vagrant/repo/hello_1.0_all.deb
+    sudo chmod 777 /home/vagrant/repo/hello_1.0_all.deb
+    sudo dpkg -i /home/vagrant/repo/hello_1.0_all.deb
+
+    sudo apt install gnupg -y
+    sudo apt install rng-tools -y
+    sudo apt install dpkg-sig -y
+    sudo apt install reprepro -y
+
+
+    SHELL
+  end
+
+end  
