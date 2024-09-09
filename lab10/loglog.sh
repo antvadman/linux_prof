@@ -14,9 +14,7 @@ file="/tmp/access.log"
 touch ./iptmp
 touch ./urltmp
 touch ./codetmp
-
-sleep 40
-
+touch ./datetmp
 while read -r line; do
  #echo -e  "$line\n"
  IFS=' '
@@ -34,10 +32,22 @@ while read -r line; do
   echo "${ARR[10]}" >> ./urltmp
  fi
 
+echo "${ARR[3]:1}" >> ./datetmp
+
 done <$file
 
+run_date=$(date +"%d/%m/%Y:%H:%M:%S")
+echo "Script run date $run_date" >> ./report
+
+start_date=$(sort ./datetmp | head -1)
+echo "Start report date $start_date" >> ./report
+
+end_date=$(sort ./datetmp | tail -1)
+echo "End report date $start_date" >> ./report
+
+
 echo "     count  IP" >> ./report
-sort ./iptmp | uniq -c | sort -bgr >> ./report 
+sort ./iptmp | uniq -c | sort -bgr | head -n $1 >> ./report 
 
 echo "-----------------------------------------------" >> ./report
 
@@ -47,7 +57,7 @@ sort ./codetmp | uniq -c | sort -bgr >> ./report
 echo "-----------------------------------------------" >> ./report
 
 echo "     count  URL" >> ./report
-sort ./urltmp | uniq -c | sort -bgr >> ./report
+sort ./urltmp | uniq -c | sort -bgr | head -n $1 >> ./report
 
 echo "------------------------ERRORS-----------------" >> ./report
 
